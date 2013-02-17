@@ -15,4 +15,5 @@ ARCHIVES :=
 SUBDIRS := \
 src/bp_implementations \
 src \
+. \
 
