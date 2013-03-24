@@ -65,9 +65,9 @@ objs:
 
 help:
 	@echo "Usage:"
-	@echo "For DTN2:	make DTN_DIR=<dtn2_dir>"
+	@echo "For DTN2:	make DTN2_DIR=<dtn2_dir>"
 	@echo "For ION:	make ION_DIR=<ion_dir>"
-	@echo "For both:	make DTN_DIR=<dtn2_dir> ION_DIR=<ion_dir>"
+	@echo "For both:	make DTN2_DIR=<dtn2_dir> ION_DIR=<ion_dir>"
 
 clean:
 	@rm -rf *.o *.so *.a
