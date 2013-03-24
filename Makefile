@@ -5,44 +5,59 @@ LIB=static
 LIB_NAME_BASE=libal_bp
 CC=gcc
 DIR_BP_IMPL=./src/bp_implementations/
+SUFFIX=
 
-ifeq ($(strip $(LIB)),static)
-LIB_NAME=$(LIB_NAME_BASE).a
-LIB_CC=ar crs
-else
-LIB_NAME=$(LIB_NAME_BASE).so
-LIB_CC=gcc -shared -o
-endif
-
-ifeq ($(or $(ION_DIR),$(DTN_DIR)),)
+ifeq ($(or $(ION_DIR),$(DTN2_DIR)),)
 # NOTHING
 all: help
 else 
 all: lib
 endif 
 
-ifeq ($(strip $(DTN_DIR)),)
+LIB_NAME=$(LIB_NAME_BASE)
+
+ifeq ($(strip $(DTN2_DIR)),)
+ifneq ($(strip $(ION_DIR)),)
 # ION
+LIB_NAME=$(LIB_NAME_BASE)_vION
 INC=-I$(ION_DIR) -I$(ION_DIR)/bp/include -I$(ION_DIR)/bp/library
 OPT=-DION_IMPLEMENTATION -fPIC
+endif
 else ifeq ($(strip $(ION_DIR)),)
-# DTN
-INC=-I$(DTN_DIR) -I$(DTN_DIR)/applib/
+ifneq ($(strip $(DTN2_DIR)),)
+# DTN2
+LIB_NAME=$(LIB_NAME_BASE)_vDTN2
+INC=-I$(DTN2_DIR) -I$(DTN2_DIR)/applib/
 OPT=-DDTN_IMPLEMENTATION -fPIC
-else ifneq ($(and $(ION_DIR),$(DTN_DIR)),)
+endif
+else ifneq ($(strip $(ION_DIR)),)
+ifneq ($(strip $(DTN2_DIR)),)
 # BOTH
-INC=-I$(DTN_DIR) -I$(DTN_DIR)/applib/ -I$(ION_DIR)/bp/include -I$(ION_DIR)/bp/library
+LIB_NAME=$(LIB_NAME_BASE)
+INC=-I$(DTN2_DIR) -I$(DTN2_DIR)/applib/ -I$(ION_DIR)/bp/include -I$(ION_DIR)/bp/library
 OPT=-DION_IMPLEMENTATION -DDTN_IMPLEMENTATION -fPIC
 endif
+#else ifeq ($(and $(strip $(DTN2_DIR)), $(strip $(ION_DIR))),)
+endif
+
+ifeq ($(strip $(LIB)),static)
+SUFFIX=.a
+LIB_CC=ar crs
+else
+SUFFIX=.so
+LIB_CC=gcc -shared -o
+endif
+
+INSTALLED=$(wildcard /usr/lib/$(LIB_NAME)*)
 
 lib: objs
-	$(LIB_CC) $(LIB_NAME) *.o
+	$(LIB_CC) $(LIB_NAME)$(SUFFIX) *.o
 	
 install: 
-	cp $(LIB_NAME) /usr/lib/
+	cp $(LIB_NAME)* /usr/lib/
 
-uninstall: 
-	rm -rf /usr/lib/$(LIB_NAME)
+uninstall:
+	@if test `echo $(INSTALLED) | wc -w` -eq 1 -a -f "$(INSTALLED)"; then rm -rf $(INSTALLED); else if test -n "$(INSTALLED)"; then echo "MORE THAN 1 FILE, DELETE THEM MANUALLY: $(INSTALLED)"; else echo "NOT INSTALLED"; fi fi
 
 objs:
 	$(CC) -I$(DIR_BP_IMPL) $(INC) $(OPT) -c src/*.c
@@ -50,9 +65,9 @@ objs:
 
 help:
 	@echo "Usage:"
-	@echo "For Only DTN2 Impl: 	make DTN_DIR=<dtn2_dir>"
-	@echo "For Only ION Impl:	make ION_DIR=<ion_dir>"
-	@echo "For both Impl: 		make DTN_DIR=<dtn2_dir> ION_DIR=<ion_dir>"
+	@echo "For DTN2:	make DTN_DIR=<dtn2_dir>"
+	@echo "For ION:	make ION_DIR=<ion_dir>"
+	@echo "For both:	make DTN_DIR=<dtn2_dir> ION_DIR=<ion_dir>"
 
 clean:
 	@rm -rf *.o *.so *.a
