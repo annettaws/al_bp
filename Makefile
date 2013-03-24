@@ -20,7 +20,7 @@ ifeq ($(strip $(DTN2_DIR)),)
 ifneq ($(strip $(ION_DIR)),)
 # ION
 LIB_NAME=$(LIB_NAME_BASE)_vION
-INC=-I$(ION_DIR) -I$(ION_DIR)/bp/include -I$(ION_DIR)/bp/library
+INC=-I$(ION_DIR) -I$(ION_DIR)/bp/include -I$(ION_DIR)/bp/library -I$(ION_DIR)/ici/include
 OPT=-DION_IMPLEMENTATION -fPIC
 endif
 else ifeq ($(strip $(ION_DIR)),)
