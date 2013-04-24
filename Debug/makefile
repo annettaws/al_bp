@@ -24,19 +24,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libbp_abstraction_layer.a
+all: libal_bp.a
 
 # Tool invocations
-libbp_abstraction_layer.a: $(OBJS) $(USER_OBJS)
+libal_bp.a: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Archiver'
-	ar -rcs  "libbp_abstraction_layer.a" $(OBJS) $(USER_OBJS) $(LIBS)
+	ar -rcs  "libal_bp.a" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(ARCHIVES) libbp_abstraction_layer.a
+	-$(RM) $(OBJS)$(C_DEPS)$(ARCHIVES) libal_bp.a
 	-@echo ' '
 
 .PHONY: all clean dependents
