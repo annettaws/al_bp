@@ -12,7 +12,7 @@ DEBUG_FLAG=
 else
 DEBUG_FLAG=-g -fno-inline
 endif
-CFLAGS= $(DEBUG_FLAG) -Wall -fPIC -Werror
+CFLAGS= $(DEBUG_FLAG) -Wall -fPIC -Werror -O2
 
 ifeq ($(or $(ION_DIR),$(DTN2_DIR)),)
 # NOTHING
