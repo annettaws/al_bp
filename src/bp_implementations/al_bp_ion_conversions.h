@@ -35,8 +35,14 @@
  * so the conversion is ion -> bp
  */
 
-BpSAP al_ion_handle(al_bp_handle_t handle);
-al_bp_handle_t ion_al_handle(BpSAP handle);
+struct al_ion_handle_t{
+	BpSAP *recv;
+	BpSAP *source;
+};
+typedef struct al_ion_handle_t * al_ion_handle_t;
+
+al_ion_handle_t al_ion_handle(al_bp_handle_t handle);
+al_bp_handle_t ion_al_handle(al_ion_handle_t handle);
 
 char * al_ion_endpoint_id(al_bp_endpoint_id_t endpoint_id);
 al_bp_endpoint_id_t ion_al_endpoint_id(char * endpoint_id);
@@ -68,6 +74,6 @@ BpStatusRpt al_ion_bundle_status_report(al_bp_bundle_status_report_t bundle_stat
 al_bp_bundle_status_report_t ion_al_bundle_status_report(BpStatusRpt bundle_status_report);
 
 al_bp_bundle_payload_t ion_al_bundle_payload(Payload bundle_payload,al_bp_bundle_payload_location_t location,char * filename);
-Payload al_ion_bundle_payload(al_bp_bundle_payload_t bundle_payload);
+Payload al_ion_bundle_payload(al_bp_bundle_payload_t bundle_payload, int  priority, BpExtendedCOS extendedCOS);
 #endif  /* AL_BP_DTN_CONVERSIONS_H_ */
 #endif /* ION_IMPLEMENTAION */

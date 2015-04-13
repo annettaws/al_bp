@@ -8,11 +8,11 @@ DIR_BP_IMPL=./src/bp_implementations/
 SUFFIX=
 DEBUG=0
 ifeq ($(DEBUG),0)
-DEBUG_FLAG=
+DEBUG_FLAG= -O2
 else
-DEBUG_FLAG=-g -fno-inline
+DEBUG_FLAG=-g -fno-inline -O0
 endif
-CFLAGS= $(DEBUG_FLAG) -Wall -fPIC -Werror -O2
+CFLAGS= $(DEBUG_FLAG) -Wall -fPIC -Werror
 
 ifeq ($(or $(ION_DIR),$(DTN2_DIR)),)
 # NOTHING
@@ -71,8 +71,8 @@ objs:
 help:
 	@echo "Usage:"
 	@echo "For DTN2:	make DTN2_DIR=<dtn2_dir>"
-	@echo "For ION:	make ION_DIR=<ion_dir>"
-	@echo "For both:	make DTN2_DIR=<dtn2_dir> ION_DIR=<ion_dir>"
+	@echo "For ION:		make ION_DIR=<ion_dir> ION_VERS_UP_3.3.0=<yes|no>"
+	@echo "For both:	make DTN2_DIR=<dtn2_dir> ION_DIR=<ion_dir> ION_VERS_UP_3.3.0=<yes|no>"
 	@echo "To compile with debug symbols add DEBUG=1"
 
 clean:

@@ -108,9 +108,9 @@ al_bp_error_t bp_ion_register(al_bp_handle_t * handle,
 						al_bp_reg_id_t* newregid)
 {
 	int result;
-	BpSAP bpSap;
+	al_ion_handle_t ion_handle;
 	char * eid;
-	bpSap = al_ion_handle(*handle);
+	ion_handle = al_ion_handle(*handle);
 	eid = al_ion_endpoint_id(reginfo->endpoint);
 /*	switch(reginfo->flags)
 	{
@@ -125,12 +125,17 @@ al_bp_error_t bp_ion_register(al_bp_handle_t * handle,
 		if(result == 0)
 			return BP_EREG;
 	}
-	result = bp_open(eid,&bpSap);
+	//result = bp_open(eid, (bpSap->source));
+	//bpSap->source = NULL;
+	result = bp_open_source(eid, (ion_handle->source), 1);
+	if(result == -1)
+		return BP_EREG;
+	result = bp_open(eid, (ion_handle->recv));
 	if(result == -1)
 		return BP_EREG;
 	//Free resource
 	free(eid);
-	(*handle) = ion_al_handle(bpSap);
+	(*handle) = ion_al_handle(ion_handle);
 	return BP_SUCCESS;
 }
 
@@ -185,7 +190,8 @@ al_bp_error_t bp_ion_send(al_bp_handle_t handle,
 					al_bp_bundle_payload_t* payload,
 					al_bp_bundle_id_t* id)
 {
-	BpSAP bpSap = al_ion_handle(handle);
+	al_ion_handle_t ion_handle = al_ion_handle(handle);
+	BpSAP bpSap = *(ion_handle->source);
 	char * destEid = al_ion_endpoint_id(spec->dest);
 	char * reportEid = NULL;
 	char * tokenClassOfService;
@@ -199,11 +205,7 @@ al_bp_error_t bp_ion_send(al_bp_handle_t handle,
 	custodySwitch = NoCustodyRequested;
 	srrFlags = al_ion_bundle_srrFlags(spec->dopts);
 	ackRequested = 0;
-	Payload ion_payload = al_ion_bundle_payload((*payload));
-	Object adu = ion_payload.content;
-	Object newBundleObj;
-	/* Create String for parse class of service */
-	
+	/* Create String for parse class of service */	
 	if(spec->dopts & BP_DOPTS_CUSTODY)
 	{
 			tmpCustody = 1;
@@ -224,6 +226,10 @@ al_bp_error_t bp_ion_send(al_bp_handle_t handle,
 	result = bp_parse_class_of_service(tokenClassOfService,&extendedCOS,&custodySwitch,&tmpPriority);
 	if(result == 0)
 		return BP_EINVAL;
+	Payload ion_payload = al_ion_bundle_payload((*payload), tmpPriority, extendedCOS);
+	Object adu = ion_payload.content;
+	Object newBundleObj;
+
 	/* Send Bundle*/
 	result = bp_send(bpSap,destEid,reportEid,lifespan,tmpPriority,
 			custodySwitch,srrFlags,ackRequested,&extendedCOS,adu,&newBundleObj);
@@ -264,8 +270,10 @@ al_bp_error_t bp_ion_send(al_bp_handle_t handle,
 
 
 	//
-	handle = ion_al_handle(bpSap);
+	ion_handle->source = &bpSap;
+	handle = ion_al_handle(ion_handle);
 	//Free resource
+	bp_release((SdrAddress) newBundleObj);
 	free(destEid);
 	free(reportEid);
 	free(tokenClassOfService);
@@ -278,7 +286,8 @@ al_bp_error_t bp_ion_recv(al_bp_handle_t handle,
 					al_bp_bundle_payload_t* payload,
 					al_bp_timeval_t timeout)
 {
-	BpSAP bpSap = al_ion_handle(handle);
+	al_ion_handle_t ion_handle = al_ion_handle(handle);
+	BpSAP bpSap = *(ion_handle->recv);
 	BpDelivery dlv;
 	DtnTime ion_timeout = al_ion_timeval(timeout);
 	int second_timeout = (int) ion_timeout.seconds;
@@ -341,16 +350,18 @@ al_bp_error_t bp_ion_recv(al_bp_handle_t handle,
 	/* Release Delivery */
 	bp_release_delivery(&dlv, 1);
 	//
-	handle = ion_al_handle(bpSap);
+	ion_handle->recv = &bpSap;
+	handle = ion_al_handle(ion_handle);
 
 	return BP_SUCCESS;
 }
 
 al_bp_error_t bp_ion_close(al_bp_handle_t handle)
 {
-	BpSAP bpSap  = al_ion_handle(handle);
-	bp_close(bpSap);
-	handle = ion_al_handle(bpSap);
+	al_ion_handle_t ion_handle = al_ion_handle(handle);
+	bp_close(*ion_handle->recv);
+	bp_close(*ion_handle->source);
+	handle = ion_al_handle(ion_handle);
 	return BP_SUCCESS;
 }
 
@@ -415,7 +426,11 @@ void bp_ion_free_payload(al_bp_bundle_payload_t* payload)
 		sdr_begin_xn(bpSdr);
 		Object fileRef = sdr_find(bpSdr, payload->filename.filename_val, &type);
 		if(fileRef != 0)
+		{
 			zco_destroy_file_ref(bpSdr, fileRef);
+//by David Zoller remove filename from catalog 
+                        sdr_uncatlg(bpSdr, payload->filename.filename_val);
+		}
 		else
 		//delete the payload file
 			unlink(payload->filename.filename_val);
