@@ -8,11 +8,11 @@ DIR_BP_IMPL=./src/bp_implementations/
 SUFFIX=
 DEBUG=0
 ifeq ($(DEBUG),0)
-DEBUG_FLAG=
+DEBUG_FLAG= -O2
 else
-DEBUG_FLAG=-g -fno-inline
+DEBUG_FLAG=-g -fno-inline -O0
 endif
-CFLAGS= $(DEBUG_FLAG) -Wall -fPIC -Werror -O2
+CFLAGS= $(DEBUG_FLAG) -Wall -fPIC -Werror
 
 ifeq ($(or $(ION_DIR),$(DTN2_DIR)),)
 # NOTHING
